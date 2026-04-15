@@ -1,0 +1,32 @@
+project:
+  name: NICO Trade Hub
+  start_month: 2022-01
+paths:
+  database: data/curated/nico_trade.duckdb
+  bronze_dir: data/bronze
+  inbox_dir: data/inbox
+  export_dir: data/exports
+  log_dir: data/logs
+  country_aliases: config/catalogs/country_aliases.csv
+sources:
+  banxico:
+    enabled: true
+    headless: true
+    timeout_ms: 90000
+    value_matrix_url: https://www.banxico.org.mx/CuboComercioExterior/ValorDolares/matrizprodregion
+    volume_matrix_url: https://www.banxico.org.mx/CuboComercioExterior/Volumen/matrizprodregion
+    export_mode: excel
+    default_level: Fracción
+    expand_visible_nodes: true
+    max_visible_expands: 120
+    preferred_mode: api
+    fallback_browser: true
+  inegi_bcmm:
+    enabled: true
+    mode: manual_or_browser
+    monthly_2021_2022_url: https://www.inegi.org.mx/sistemas/Olap/Proyectos/bd/continuas/comex/comex_bcmm_mensual2021_2022.asp
+    monthly_2023_url: https://www.inegi.org.mx/sistemas/Olap/Proyectos/bd/continuas/comex/comex_bcmm_mensual2023.asp
+app:
+  default_port: 8501
+  page_title: NICO Trade Hub
+  page_icon: 📦

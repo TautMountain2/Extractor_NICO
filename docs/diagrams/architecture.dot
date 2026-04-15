@@ -1,0 +1,16 @@
+digraph G {
+  rankdir=LR;
+  node [shape=box, style=rounded];
+  source [label="INEGI / BCMM\nCubo interactivo"];
+  manual [label="Archivos exportados\nmanuales"];
+  etl [label="ETL\nnormalización + validación"];
+  db [label="DuckDB local\ncatálogos + hechos + auditoría"];
+  ui [label="Streamlit UI"];
+  export [label="CSV / Parquet / DTA"];
+
+  source -> etl;
+  manual -> etl;
+  etl -> db;
+  db -> ui;
+  ui -> export;
+}

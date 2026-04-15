@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nico-trade-hub"
+version = "0.2.0"
+description = "Base local y dashboard para comercio exterior de México a nivel fracción y NICO"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+  {name = "OpenAI"}
+]
+dependencies = [
+  "duckdb>=1.1",
+  "openpyxl>=3.1",
+  "pandas>=2.2",
+  "playwright>=1.53",
+  "pyarrow>=18.0",
+  "pycountry>=24.6",
+  "PyYAML>=6.0",
+  "streamlit>=1.46",
+  "typer>=0.16",
+  "rich>=14.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.3",
+  "pytest-cov>=6.0"
+]
+
+[project.scripts]
+tradehub = "nico_trade_hub.cli:run"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

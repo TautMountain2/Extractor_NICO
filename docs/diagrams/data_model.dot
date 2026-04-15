@@ -1,0 +1,16 @@
+digraph G {
+  rankdir=TB;
+  node [shape=record];
+  fact [label="fact_trade_monthly|date_month|flow_code|country_name|tariff_code|value_usd|quantity|hs2|hs4|hs6|fraccion8|nico10"];
+  country [label="dim_country|country_key|canonical_name|iso3"];
+  flow [label="dim_flow|flow_key|flow_code|flow_name"];
+  source [label="dim_source|source_key|source_code|source_name"];
+  load [label="load_run|load_run_id|status|started_at|finished_at"];
+  registry [label="etl_file_registry|file_path|parser_name|processed_at"];
+
+  country -> fact;
+  flow -> fact;
+  source -> fact;
+  load -> fact;
+  load -> registry;
+}

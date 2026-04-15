@@ -1,0 +1,14 @@
+/*! \mainpage NICO Trade Hub
+
+# NICO Trade Hub
+
+Base local y dashboard para construir una base de datos de comercio exterior de México a nivel NICO.
+
+## Índice rápido
+- \subpage architecture_page
+- \subpage sources_page
+- \subpage database_page
+- \subpage ui_page
+- \subpage operations_page
+
+*/
