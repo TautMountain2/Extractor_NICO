@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import cProfile
 from pathlib import Path
+import pstats
 
 import typer
 from rich import print
@@ -10,6 +12,7 @@ from rich import print
 from .database import Database
 from .logging_utils import configure_logging
 from .nico_catalog import NicoCatalogLoader
+from .perf_trace import PerfTrace
 from .settings import load_settings
 from .sync import Synchronizer
 
@@ -67,14 +70,57 @@ def sync_banxico(
     flow: str = typer.Option("both", help="IMPORT, EXPORT o both"),
     start: str = typer.Option("2022-01", help="Mes inicial YYYY-MM"),
     end: str = typer.Option("2022-01", help="Mes final YYYY-MM"),
+    trace_json: str | None = typer.Option(None, help="Ruta para guardar la traza JSON"),
+    profile_out: str | None = typer.Option(None, help="Ruta para guardar profiling .prof"),
+    profile_top: int = typer.Option(40, help="Cantidad de funciones a mostrar si se activa profiling"),
 ) -> None:
     settings = load_settings()
     configure_logging(settings.log_dir)
+
     db = Database(settings.database_path, settings.root / "migrations")
     db.init_db()
+
+    trace = PerfTrace(
+        run_name="sync-banxico",
+        output_path=Path(trace_json) if trace_json else None,
+    )
+    trace.set_meta(metric=metric, flow=flow, start=start, end=end)
+
     syncer = Synchronizer(settings, db)
-    result = syncer.sync_banxico(metric=metric, flow=flow, start_month=start, end_month=end)
+
+    if profile_out:
+        profiler = cProfile.Profile()
+        profiler.enable()
+        result = syncer.sync_banxico(
+            metric=metric,
+            flow=flow,
+            start_month=start,
+            end_month=end,
+            trace=trace,
+        )
+        profiler.disable()
+
+        profile_path = Path(profile_out)
+        profile_path.parent.mkdir(parents=True, exist_ok=True)
+        profiler.dump_stats(str(profile_path))
+
+        stats = pstats.Stats(profiler).sort_stats("cumtime")
+        stats.print_stats(profile_top)
+
+        print(f"[cyan]Perfil guardado en:[/cyan] {profile_path}")
+    else:
+        result = syncer.sync_banxico(
+            metric=metric,
+            flow=flow,
+            start_month=start,
+            end_month=end,
+            trace=trace,
+        )
+
+    dumped = trace.dump()
     print(result)
+    if dumped:
+        print(f"[cyan]Traza guardada en:[/cyan] {dumped}")
 
 
 @app.command("export")

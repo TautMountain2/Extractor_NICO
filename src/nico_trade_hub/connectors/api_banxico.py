@@ -22,8 +22,10 @@ import traceback
 import time
 import unicodedata
 import urllib.error
-import urllib.request
 import zlib
+
+import urllib3
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from collections import OrderedDict, defaultdict
 from dataclasses import dataclass
 from pathlib import Path
@@ -37,6 +39,10 @@ except Exception:  # pragma: no cover
 import pandas as pd
 from playwright.async_api import Page, async_playwright
 
+from .banxico_frontier import BanxicoFrontierPlanner, FrontierTask
+from .banxico_http import BanxicoHttpClient
+from .banxico_payloads import BanxicoPayloadBuilder
+from .banxico_topology_cache import BanxicoTopologyCache, CachedTopologySnapshot
 from .browser_banxico import BanxicoJob, BanxicoJobResult
 
 LOGGER = logging.getLogger(__name__)
@@ -357,6 +363,7 @@ _STATIC_CHAPTER_PARENT_MAP = {
 class _CapturedTemplate:
     headers: dict[str, str]
     payload: dict[str, Any]
+    payload_builder: BanxicoPayloadBuilder | None = None
 
 
 @dataclass(slots=True)
@@ -379,10 +386,48 @@ class _ResponseFacts:
     frontier_products: list[str]
 
 
+@dataclass(slots=True)
+class _ExpansionOutcome:
+    next_targets: list[str]
+    queried: bool
+    parsed: _ResponseFacts | None = None
+    transient_error: str | None = None
+
+
 class BanxicoMatrixApiConnector:
-    def __init__(self, settings) -> None:
+    def __init__(self, settings, trace=None) -> None:
         self.settings = settings
         self.config = settings.raw["sources"]["banxico"]
+        self.trace = trace
+
+        timeout_seconds = max(30, int(self.config.get("timeout_ms", 90000)) // 1000)
+        configured_pool_maxsize = int(self.config.get("api_http_pool_maxsize", 4))
+        configured_parallelism = int(self.config.get("api_parallelism", 4))
+        pool_maxsize = max(1, configured_pool_maxsize, configured_parallelism)
+        connect_timeout_seconds = int(self.config.get("api_http_connect_timeout_seconds", 15))
+
+        self.http = BanxicoHttpClient(
+            timeout_seconds=timeout_seconds,
+            connect_timeout_seconds=connect_timeout_seconds,
+            pool_maxsize=pool_maxsize,
+        )
+        self.topology_cache = BanxicoTopologyCache(
+            settings.database_path,
+            enabled=bool(self.config.get("api_topology_cache_enabled", True)),
+        )
+        self.cache_mode = str(self.config.get("api_topology_cache_mode", "members_only")).strip().lower()
+        self.cache_frontier_enabled = bool(
+            self.config.get(
+                "api_topology_cache_use_frontier",
+                self.cache_mode in {"frontier", "frontier_experimental"},
+            )
+        )
+        self.cache_persist_frontier = bool(
+            self.config.get("api_topology_cache_persist_frontier", self.cache_frontier_enabled)
+        )
+        self.cache_skip_persist_if_unchanged = bool(
+            self.config.get("api_topology_cache_skip_persist_if_unchanged", True)
+        )
 
     def run_job(self, job: BanxicoJob) -> Path:
         result = self.run_jobs([job])[0]
@@ -391,7 +436,12 @@ class BanxicoMatrixApiConnector:
         return result.output_path
 
     def run_jobs(self, jobs: list[BanxicoJob]) -> list[BanxicoJobResult]:
-        return asyncio.run(self._run_jobs(jobs))
+        if self.trace:
+            self.trace.event("api_connector.run_jobs_called", jobs=len(jobs))
+        try:
+            return asyncio.run(self._run_jobs(jobs))
+        finally:
+            self.http.close()
 
     async def _run_jobs(self, jobs: list[BanxicoJob]) -> list[BanxicoJobResult]:
         if not jobs:
@@ -407,66 +457,107 @@ class BanxicoMatrixApiConnector:
         url = self.config["value_matrix_url"]
         results: list[BanxicoJobResult] = []
 
-        async with async_playwright() as p:
-            browser = await p.chromium.launch(headless=bool(self.config.get("headless", True)))
-            context = await browser.new_context()
-            page = await context.new_page()
-            page.set_default_timeout(int(self.config.get("timeout_ms", 90000)))
+        if self.trace:
+            self.trace.set_meta(api_metric=first_metric, api_jobs=len(jobs))
 
-            try:
-                template = await self._bootstrap_template(page, url, metric=first_metric)
-                # Para el extractor exhaustivo no dependemos del payload live capturado;
-                # usamos una plantilla estática conocida y una sesión live.
-                template = _CapturedTemplate(headers=template.headers,
-                                             payload=self._static_payload_template(first_metric))
+        with (self.trace.stage("api.playwright_session") if self.trace else _nullcontext()):
+            async with async_playwright() as p:
+                browser = await p.chromium.launch(headless=bool(self.config.get("headless", True)))
+                context = await browser.new_context()
+                page = await context.new_page()
+                page.set_default_timeout(int(self.config.get("timeout_ms", 90000)))
 
-                for job in jobs:
-                    output_path = self.settings.bronze_dir / f"{job.job_id}.xlsx"
-                    screenshot_path = self.settings.log_dir / f"{job.job_id}_api_failure.png"
-                    try:
-                        await asyncio.to_thread(self._extract_job_to_excel, template, job, output_path)
-                        LOGGER.info("Archivo Banxico reconstruido por API privada: %s", output_path)
-                        results.append(BanxicoJobResult(job=job, output_path=output_path))
-                    except urllib.error.HTTPError as exc:
-                        if exc.code == 401:
-                            LOGGER.warning("401 Banxico para %s; refrescando sesión y reintentando una vez", job.job_id)
-                            template = await self._bootstrap_template(page, url, metric=first_metric, force_reload=True)
-                            template = _CapturedTemplate(headers=template.headers,
-                                                         payload=self._static_payload_template(first_metric))
-                            try:
+                try:
+                    if self.trace:
+                        self.trace.event("api.bootstrap_start", url=url)
+                    with (self.trace.stage("api.bootstrap_template") if self.trace else _nullcontext()):
+                        template = await self._bootstrap_template(page, url, metric=first_metric)
+                    # Para el extractor exhaustivo no dependemos del payload live capturado;
+                    # usamos una plantilla estática conocida y una sesión live.
+                    static_payload = self._static_payload_template(first_metric)
+                    template = _CapturedTemplate(
+                        headers=template.headers,
+                        payload=static_payload,
+                        payload_builder=BanxicoPayloadBuilder.from_payload(static_payload),
+                    )
+                    self.http.update_session_headers(template.headers)
+
+                    if self.trace:
+                        self.trace.event("api.job_loop_start", jobs=len(jobs))
+
+                    for job in jobs:
+                        output_path = self.settings.bronze_dir / f"{job.job_id}.xlsx"
+                        screenshot_path = self.settings.log_dir / f"{job.job_id}_api_failure.png"
+                        try:
+                            if self.trace:
+                                self.trace.event("api.job_start", job_id=job.job_id)
+                            with (self.trace.stage("api.extract_job_to_excel", job_id=job.job_id) if self.trace else _nullcontext()):
                                 await asyncio.to_thread(self._extract_job_to_excel, template, job, output_path)
-                                LOGGER.info("Archivo Banxico reconstruido tras refresh: %s", output_path)
-                                results.append(BanxicoJobResult(job=job, output_path=output_path))
-                                continue
-                            except Exception as retry_exc:
-                                await self._try_screenshot(page, screenshot_path)
-                                results.append(
-                                    BanxicoJobResult(
-                                        job=job,
-                                        error_message=str(retry_exc),
-                                        error_traceback=traceback.format_exc(),
-                                    )
+                            LOGGER.info("Archivo Banxico reconstruido por API privada: %s", output_path)
+                            results.append(BanxicoJobResult(job=job, output_path=output_path))
+                            if self.trace:
+                                self.trace.incr("api_jobs_ok", 1)
+                                self.trace.event("api.job_finished", job_id=job.job_id, output_path=str(output_path))
+                        except urllib.error.HTTPError as exc:
+                            if exc.code == 401:
+                                LOGGER.warning("401 Banxico para %s; refrescando sesión y reintentando una vez", job.job_id)
+                                if self.trace:
+                                    self.trace.incr("api_http_401_refresh", 1)
+                                    self.trace.event("api.job_401_refresh", job_id=job.job_id)
+                                template = await self._bootstrap_template(page, url, metric=first_metric, force_reload=True)
+                                refreshed_static_payload = self._static_payload_template(first_metric)
+                                template = _CapturedTemplate(
+                                    headers=template.headers,
+                                    payload=refreshed_static_payload,
+                                    payload_builder=BanxicoPayloadBuilder.from_payload(refreshed_static_payload),
                                 )
-                                continue
-                        await self._try_screenshot(page, screenshot_path)
-                        results.append(
-                            BanxicoJobResult(
-                                job=job,
-                                error_message=str(exc),
-                                error_traceback=traceback.format_exc(),
+                                self.http.update_session_headers(template.headers)
+                                try:
+                                    await asyncio.to_thread(self._extract_job_to_excel, template, job, output_path)
+                                    LOGGER.info("Archivo Banxico reconstruido tras refresh: %s", output_path)
+                                    results.append(BanxicoJobResult(job=job, output_path=output_path))
+                                    if self.trace:
+                                        self.trace.incr("api_jobs_ok", 1)
+                                        self.trace.event("api.job_finished", job_id=job.job_id, output_path=str(output_path))
+                                    continue
+                                except Exception as retry_exc:
+                                    await self._try_screenshot(page, screenshot_path)
+                                    results.append(
+                                        BanxicoJobResult(
+                                            job=job,
+                                            error_message=str(retry_exc),
+                                            error_traceback=traceback.format_exc(),
+                                        )
+                                    )
+                                    if self.trace:
+                                        self.trace.incr("api_jobs_failed", 1)
+                                        self.trace.event("api.job_exception", job_id=job.job_id, error=str(retry_exc))
+                                    continue
+                            await self._try_screenshot(page, screenshot_path)
+                            results.append(
+                                BanxicoJobResult(
+                                    job=job,
+                                    error_message=str(exc),
+                                    error_traceback=traceback.format_exc(),
+                                )
                             )
-                        )
-                    except Exception as exc:
-                        await self._try_screenshot(page, screenshot_path)
-                        results.append(
-                            BanxicoJobResult(
-                                job=job,
-                                error_message=str(exc),
-                                error_traceback=traceback.format_exc(),
+                            if self.trace:
+                                self.trace.incr("api_jobs_failed", 1)
+                                self.trace.event("api.job_exception", job_id=job.job_id, error=str(exc))
+                        except Exception as exc:
+                            await self._try_screenshot(page, screenshot_path)
+                            results.append(
+                                BanxicoJobResult(
+                                    job=job,
+                                    error_message=str(exc),
+                                    error_traceback=traceback.format_exc(),
+                                )
                             )
-                        )
-            finally:
-                await browser.close()
+                            if self.trace:
+                                self.trace.incr("api_jobs_failed", 1)
+                                self.trace.event("api.job_exception", job_id=job.job_id, error=str(exc))
+                finally:
+                    await browser.close()
         return results
 
     async def _try_screenshot(self, page: Page, screenshot_path: Path) -> None:
@@ -548,12 +639,18 @@ class BanxicoMatrixApiConnector:
                 try:
                     template = await asyncio.wait_for(queue.get(), timeout=phase_timeout)
                     LOGGER.info("Bootstrap Banxico capturado desde request live (%s)", url)
+                    if self.trace:
+                        self.trace.incr("bootstrap_live_capture", 1)
+                        self.trace.event("bootstrap_live_capture")
                     return template
                 except asyncio.TimeoutError:
                     if attempt == 0:
                         LOGGER.warning(
                             "Bootstrap Banxico no capturó runQuery al primer intento; recargando la página una vez"
                         )
+                        if self.trace:
+                            self.trace.incr("bootstrap_reload_once", 1)
+                            self.trace.event("bootstrap_reload_once")
                         try:
                             await page.reload(wait_until="load")
                         except Exception:
@@ -563,6 +660,9 @@ class BanxicoMatrixApiConnector:
 
             if last_infra_headers:
                 LOGGER.warning("Usando payload base estático Banxico; solo se capturó la sesión/headers live")
+                if self.trace:
+                    self.trace.incr("bootstrap_static_payload_fallback", 1)
+                    self.trace.event("bootstrap_static_payload_fallback")
                 return _CapturedTemplate(headers=last_infra_headers, payload=self._static_payload_template(metric))
 
             raise RuntimeError("No se pudo capturar un payload base válido de IQueryService.runQuery")
@@ -814,48 +914,51 @@ class BanxicoMatrixApiConnector:
             member_caption=flow_label,
         )
 
-        raw = json.dumps(payload, ensure_ascii=False).encode("utf-8")
-        headers = {
-            k: v
-            for k, v in template.headers.items()
-            if k.lower() not in {"content-length", "host"}
-        }
-        # Banxico/Pyramid a veces corta conexiones largas con WinError 10054.
-        # Forzar cierre evita reutilización problemática y los reintentos absorben
-        # resets transitorios sin abortar todo el job.
-        headers["Connection"] = "close"
-        timeout_seconds = max(30, int(self.config.get("timeout_ms", 90000)) // 1000)
         max_attempts = max(1, int(self.config.get("api_http_retries", 4)))
         retry_delay = float(self.config.get("api_http_retry_delay_seconds", 1.5))
-        last_exc: Exception | None = None
 
-        for attempt in range(1, max_attempts + 1):
-            request = urllib.request.Request(
-                INFRA_ENTRYPOINT_URL,
-                data=raw,
-                headers=headers,
-                method="POST",
+        try:
+            response = self.http.request_json(
+                url=INFRA_ENTRYPOINT_URL,
+                payload=payload,
+                max_attempts=max_attempts,
+                retry_delay_seconds=retry_delay,
             )
-            try:
-                with urllib.request.urlopen(request, timeout=timeout_seconds) as response:
-                    raw_bytes = response.read()
-                    content_encoding = response.headers.get("Content-Encoding", "")
-                text = self._decode_http_body(raw_bytes, content_encoding)
-                return json.loads(text)
-            except (urllib.error.URLError, TimeoutError, ConnectionError, OSError) as exc:
-                last_exc = exc
-                if attempt >= max_attempts:
-                    break
-                LOGGER.warning(
-                    "Banxico API: fallo HTTP transitorio (%s/%s): %s; reintentando",
-                    attempt,
-                    max_attempts,
-                    exc,
-                )
-                time.sleep(retry_delay * attempt)
 
-        assert last_exc is not None
-        raise last_exc
+            if self.trace:
+                self.trace.incr("api_http_requests", 1)
+                self.trace.add_value("api_http_elapsed_seconds", response.elapsed_seconds)
+                self.trace.add_value("api_http_attempts_total", response.attempt)
+                self.trace.event(
+                    "api_http_request_ok",
+                    status=response.status,
+                    elapsed_seconds=response.elapsed_seconds,
+                    attempt=response.attempt,
+                )
+
+            text = self._decode_http_body(
+                response.data,
+                response.headers.get("Content-Encoding", ""),
+            )
+            return json.loads(text)
+
+        except urllib.error.HTTPError as exc:
+            if self.trace:
+                self.trace.incr("api_http_http_errors", 1)
+                self.trace.event(
+                    "api_http_http_error",
+                    code=getattr(exc, "code", None),
+                    error=str(exc),
+                )
+            raise
+
+        except (urllib3.exceptions.HTTPError, TimeoutError, ConnectionError, OSError) as exc:
+            if self.trace:
+                self.trace.incr("api_http_transient_failures", 1)
+                self.trace.event("api_http_transient_failure", error=str(exc))
+                if "timed out" in str(exc).lower():
+                    self.trace.incr("api_http_timeouts", 1)
+            raise
 
     @staticmethod
     def _decode_http_body(raw_bytes: bytes, content_encoding: str) -> str:
@@ -893,7 +996,7 @@ class BanxicoMatrixApiConnector:
             template: _CapturedTemplate,
             job: BanxicoJob,
     ) -> tuple[dict[tuple[str, str], float], dict[str, _MemberRecord], dict[str, str]]:
-        base_payload = copy.deepcopy(template.payload)
+        base_payload = template.payload
         root_products = self._extract_root_product_values(base_payload)
         if not root_products:
             root_products = list(_STATIC_ROOT_PRODUCTS)
@@ -907,11 +1010,65 @@ class BanxicoMatrixApiConnector:
 
         query_budget = {"count": 0, "max": int(self.config.get("max_api_queries", 2200))}
         log_every = max(1, int(self.config.get("api_log_every", 25)))
+        parallelism = max(1, int(self.config.get("api_parallelism", 4)))
+        if self.trace:
+            self.trace.incr("api_parallelism_configured", parallelism)
+
+        cache_snapshot = self.topology_cache.load_snapshot(
+            metric=job.metric,
+            expected_chapters=chapter_uniques,
+            include_frontier=self.cache_frontier_enabled,
+        )
+        min_frontier_nodes = int(self.config.get("api_topology_cache_min_frontier", 100))
+        min_chapter_coverage = int(
+            self.config.get("api_topology_cache_min_chapter_coverage", max(1, len(chapter_uniques) // 2))
+        )
+        cache_usable = self.cache_frontier_enabled and cache_snapshot.is_usable(
+            min_frontier_nodes=min_frontier_nodes,
+            min_chapter_coverage=min_chapter_coverage,
+        )
+        if self.trace:
+            self.trace.incr("api_topology_cache_members_loaded", cache_snapshot.members_count)
+            self.trace.incr("api_topology_cache_frontier_loaded", cache_snapshot.frontier_count)
+            self.trace.incr("api_topology_cache_chapter_coverage", cache_snapshot.chapter_coverage)
+            if cache_snapshot.members_count:
+                self.trace.incr("api_topology_cache_members_used", 1)
+            if not self.cache_frontier_enabled:
+                self.trace.incr("api_topology_cache_frontier_disabled", 1)
+            if cache_usable:
+                self.trace.incr("api_topology_cache_used", 1)
+                self.trace.incr("api_topology_cache_frontier_used", 1)
+
+        if cache_snapshot.members:
+            for unique_name, payload in cache_snapshot.members.items():
+                members_by_unique.setdefault(unique_name, self._member_from_cache_entry(payload))
+
+        if cache_usable:
+            LOGGER.info(
+                "Banxico API: usando caché persistente con frontera (%d miembros, %d nodos frontera, %d capítulos)",
+                cache_snapshot.members_count,
+                cache_snapshot.frontier_count,
+                cache_snapshot.chapter_coverage,
+            )
+        elif cache_snapshot.members_count:
+            LOGGER.info(
+                "Banxico API: usando caché segura de topología estructural (%d miembros); la frontera persistida está deshabilitada",
+                cache_snapshot.members_count,
+            )
+        else:
+            LOGGER.info(
+                "Banxico API: caché de topología vacía, insuficiente o deshabilitada (%d miembros, %d nodos frontera, %d capítulos)",
+                cache_snapshot.members_count,
+                cache_snapshot.frontier_count,
+                cache_snapshot.chapter_coverage,
+            )
 
         seed_payloads = self._static_seed_payloads(job.metric)
         if seed_payloads:
-            LOGGER.info("Banxico API: ejecutando %d consultas semilla amplias antes del recorrido fino",
-                        len(seed_payloads))
+            LOGGER.info(
+                "Banxico API: ejecutando %d consultas semilla amplias antes del recorrido fino",
+                len(seed_payloads),
+            )
         for idx, seed_payload in enumerate(seed_payloads, start=1):
             if query_budget["count"] >= query_budget["max"]:
                 break
@@ -929,10 +1086,6 @@ class BanxicoMatrixApiConnector:
             except Exception as exc:
                 LOGGER.warning("Banxico API: la consulta semilla %d falló: %s", idx, exc)
 
-        # Las respuestas semilla locales contienen hechos ya calculados para la
-        # captura manual de Enero 2022 / Exportación. Se usan solo para esa
-        # corrida de referencia; para otros meses/años el extractor vuelve al
-        # backend y no contamina los resultados con valores históricos.
         use_local_response_seeds = (
                 job.metric.lower() == "value"
                 and job.flow_code.upper() == "EXPORT"
@@ -946,140 +1099,173 @@ class BanxicoMatrixApiConnector:
                 "Banxico API: integrando %d respuestas semilla locales por capítulo",
                 len(chapter_response_seeds),
             )
-        for chapter_unique in chapter_uniques:
-            responses = chapter_response_seeds.get(chapter_unique, [])
-            for response_obj in responses:
-                try:
-                    parsed = self._response_to_facts(response_obj)
-                    self._merge_response_state(parsed, members_by_unique, facts, countries)
-                    LOGGER.info(
-                        "Banxico API: respuesta semilla capítulo %s -> productos con valor acumulados = %d",
-                        self._chapter_code_from_unique(chapter_unique),
-                        len({product_unique for product_unique, _country in facts}),
-                    )
-                except Exception as exc:
-                    LOGGER.warning(
-                        "Banxico API: la respuesta semilla local del capítulo %s no pudo integrarse: %s",
-                        self._chapter_code_from_unique(chapter_unique),
-                        exc,
-                    )
-
-        # Los payloads capturados por `Copy as cURL` quedan como respaldo opcional.
-        # En la práctica algunos llegan con `uniqueName` contaminados por escapes de
-        # Windows/codificación, por eso no se reenvían de forma predeterminada.
-        chapter_specific_seed_payloads = (
-            self._static_chapter_seed_payloads(job.metric)
-            if self.config.get("enable_chapter_payload_replay", False)
-            else {}
-        )
-        if chapter_specific_seed_payloads:
-            LOGGER.info(
-                "Banxico API: ejecutando %d semillas replayables por capítulo",
-                len(chapter_specific_seed_payloads),
-            )
-        for chapter_unique in chapter_uniques:
-            payloads = chapter_specific_seed_payloads.get(chapter_unique, [])
-            for payload in payloads:
-                if query_budget["count"] >= query_budget["max"]:
-                    break
-                try:
-                    query_budget["count"] += 1
-                    response_obj = self._query_job(template, job, payload_override=payload)
-                    parsed = self._response_to_facts(response_obj)
-                    self._merge_response_state(parsed, members_by_unique, facts, countries)
-                    LOGGER.info(
-                        "Banxico API: payload semilla capítulo %s -> productos con valor acumulados = %d",
-                        self._chapter_code_from_unique(chapter_unique),
-                        len({product_unique for product_unique, _country in facts}),
-                    )
-                except Exception as exc:
-                    LOGGER.warning(
-                        "Banxico API: el payload semilla del capítulo %s falló: %s",
-                        self._chapter_code_from_unique(chapter_unique),
-                        exc,
-                    )
-            if query_budget["count"] >= query_budget["max"]:
-                break
-
-        chapter_queues: OrderedDict[str, list[str]] = OrderedDict(
-            (chapter_unique, [chapter_unique]) for chapter_unique in chapter_uniques
-        )
-        chapter_counts: dict[str, int] = {chapter_unique: 0 for chapter_unique in chapter_uniques}
-        expanded: set[str] = set()
+            for chapter_unique, encoded_payloads in chapter_response_seeds.items():
+                for encoded_payload in encoded_payloads:
+                    try:
+                        parsed = self._response_to_facts(self._decode_seed_response(encoded_payload))
+                        self._merge_response_state(parsed, members_by_unique, facts, countries)
+                    except Exception as exc:
+                        LOGGER.warning(
+                            "Banxico API: no se pudo integrar la semilla local del capítulo %s: %s",
+                            self._caption_from_unique(chapter_unique),
+                            exc,
+                        )
 
         chapter_seed_stats = self._chapter_seed_stats(chapter_uniques, members_by_unique, facts)
-        if facts:
-            phase_one, phase_two = self._prioritize_chapter_phases(chapter_uniques, chapter_seed_stats)
-            chapter_uniques = phase_one + phase_two
-            chapter_queues = OrderedDict(
-                (chapter_unique, chapter_queues[chapter_unique]) for chapter_unique in chapter_uniques)
+        confirmed_frontier_by_chapter: dict[str, set[str]] = defaultdict(set)
+        rediscovery_targets: dict[str, list[str]] = defaultdict(list)
 
-        while query_budget["count"] < query_budget["max"]:
-            progress = False
-            for pos, chapter_unique in enumerate(chapter_uniques, start=1):
-                if query_budget["count"] >= query_budget["max"]:
-                    break
+        if cache_usable and cache_snapshot.frontier_by_chapter and query_budget["count"] < query_budget["max"]:
+            cache_frontier_tasks = self._build_cached_frontier_tasks(
+                cache_snapshot.frontier_by_chapter,
+                chapter_uniques=chapter_uniques,
+                members_by_unique=members_by_unique,
+            )
+            if self.trace:
+                self.trace.incr("api_topology_cache_frontier_tasks", len(cache_frontier_tasks))
 
-                queue = chapter_queues[chapter_unique]
-                while queue and queue[0] in expanded:
-                    queue.pop(0)
-                if not queue:
-                    continue
+            with ThreadPoolExecutor(max_workers=parallelism, thread_name_prefix="banxico-cache") as executor:
+                for batch in self._chunked(cache_frontier_tasks, parallelism):
+                    if query_budget["count"] >= query_budget["max"]:
+                        break
+                    if not batch:
+                        continue
 
-                leaf_hits, fact_hits = chapter_seed_stats.get(chapter_unique, (0, 0))
-                if leaf_hits == 0:
-                    per_chapter_limit = int(self.config.get("max_api_queries_per_chapter_missing", 24))
-                elif leaf_hits < 5:
-                    per_chapter_limit = int(self.config.get("max_api_queries_per_chapter_sparse", 14))
-                else:
-                    per_chapter_limit = int(self.config.get("max_api_queries_per_chapter_rich", 8))
+                    remaining_budget = query_budget["max"] - query_budget["count"]
+                    if remaining_budget <= 0:
+                        break
+                    batch = batch[:remaining_budget]
+                    if not batch:
+                        break
 
-                if chapter_counts[chapter_unique] >= per_chapter_limit:
-                    continue
+                    futures = {}
+                    members_snapshot = dict(members_by_unique)
+                    for task in batch:
+                        future = executor.submit(
+                            self._expand_single_node,
+                            template=template,
+                            job=job,
+                            base_payload=base_payload,
+                            current_unique=task.current_unique,
+                            members_by_unique=members_snapshot,
+                        )
+                        futures[future] = task
 
-                current_unique = queue.pop(0)
-                if current_unique in expanded:
-                    continue
+                    if self.trace:
+                        self.trace.incr("api_parallel_batches", 1)
+                        self.trace.incr("api_parallel_tasks", len(batch))
 
-                if chapter_counts[chapter_unique] == 0 and (
-                        pos == 1 or pos % log_every == 0 or pos == len(chapter_uniques)
-                ):
-                    member = members_by_unique.get(chapter_unique)
-                    caption = member.caption if member else chapter_unique
-                    LOGGER.info(
-                        "Banxico API: expandiendo capítulo %d/%d -> %s",
-                        pos,
-                        len(chapter_uniques),
-                        caption,
+                    for future in as_completed(futures):
+                        task = futures[future]
+                        outcome = future.result()
+                        if outcome.queried:
+                            query_budget["count"] += 1
+
+                        if outcome.parsed is not None:
+                            self._merge_response_state(outcome.parsed, members_by_unique, facts, countries)
+
+                        if outcome.transient_error:
+                            rediscovery_targets[task.chapter_unique].append(task.current_unique)
+                            continue
+
+                        if outcome.next_targets:
+                            rediscovery_targets[task.chapter_unique].extend(outcome.next_targets)
+                        elif outcome.queried:
+                            confirmed_frontier_by_chapter[task.chapter_unique].add(task.current_unique)
+
+            for chapter_unique in chapter_uniques:
+                if not cache_snapshot.frontier_by_chapter.get(chapter_unique):
+                    rediscovery_targets[chapter_unique].append(chapter_unique)
+
+        else:
+            for chapter_unique in chapter_uniques:
+                rediscovery_targets[chapter_unique].append(chapter_unique)
+
+        rediscovery_targets = {
+            chapter_unique: self._sort_member_uniques(
+                self._dedupe_preserve(values),
+                members_by_unique,
+            )
+            for chapter_unique, values in rediscovery_targets.items()
+            if values
+        }
+
+        if self.trace:
+            self.trace.incr("api_topology_cache_rediscovery_chapters", len(rediscovery_targets))
+
+        if rediscovery_targets and query_budget["count"] < query_budget["max"]:
+            planner = BanxicoFrontierPlanner(
+                chapter_uniques=[ch for ch in chapter_uniques if ch in rediscovery_targets],
+                chapter_seed_stats=chapter_seed_stats,
+                log_every=log_every,
+                limit_missing=int(self.config.get("max_api_queries_per_chapter_missing", 24)),
+                limit_sparse=int(self.config.get("max_api_queries_per_chapter_sparse", 14)),
+                limit_rich=int(self.config.get("max_api_queries_per_chapter_rich", 8)),
+                initial_targets=rediscovery_targets,
+            )
+
+            with ThreadPoolExecutor(max_workers=parallelism, thread_name_prefix="banxico-api") as executor:
+                while query_budget["count"] < query_budget["max"] and planner.has_pending_work():
+                    remaining_budget = query_budget["max"] - query_budget["count"]
+                    batch = planner.build_batch(
+                        remaining_budget=remaining_budget,
+                        max_tasks=parallelism,
                     )
+                    if not batch:
+                        break
 
-                next_targets, queried = self._expand_single_node(
-                    template=template,
-                    job=job,
-                    base_payload=base_payload,
-                    current_unique=current_unique,
-                    members_by_unique=members_by_unique,
-                    facts=facts,
-                    countries=countries,
-                    query_budget=query_budget,
-                )
-                expanded.add(current_unique)
-                if not queried:
-                    continue
+                    if self.trace:
+                        self.trace.incr("api_parallel_batches", 1)
+                        self.trace.incr("api_parallel_tasks", len(batch))
 
-                chapter_counts[chapter_unique] += 1
-                progress = True
+                    futures = {}
+                    for task in batch:
+                        if task.should_log:
+                            member = members_by_unique.get(task.chapter_unique)
+                            caption = member.caption if member else task.chapter_unique
+                            LOGGER.info(
+                                "Banxico API: expandiendo capítulo %d/%d -> %s",
+                                task.position,
+                                task.total_chapters,
+                                caption,
+                            )
 
-                next_targets = [target for target in next_targets if target not in expanded]
-                if next_targets:
-                    # los capítulos con poca cobertura reciben prioridad local
-                    if leaf_hits == 0:
-                        queue[:0] = next_targets
-                    else:
-                        queue.extend(next_targets)
+                        members_snapshot = dict(members_by_unique)
+                        future = executor.submit(
+                            self._expand_single_node,
+                            template=template,
+                            job=job,
+                            base_payload=base_payload,
+                            current_unique=task.current_unique,
+                            members_by_unique=members_snapshot,
+                        )
+                        futures[future] = task
 
-            if not progress:
-                break
+                    progress = False
+                    for future in as_completed(futures):
+                        task = futures[future]
+                        outcome = future.result()
+
+                        if outcome.queried:
+                            query_budget["count"] += 1
+                            progress = True
+
+                        if outcome.parsed is not None:
+                            self._merge_response_state(outcome.parsed, members_by_unique, facts, countries)
+
+                        planner.apply_result(
+                            task,
+                            queried=outcome.queried,
+                            next_targets=outcome.next_targets,
+                        )
+
+                        if outcome.transient_error:
+                            continue
+                        if outcome.queried and not outcome.next_targets:
+                            confirmed_frontier_by_chapter[task.chapter_unique].add(task.current_unique)
+
+                    if not progress:
+                        break
 
         if query_budget["count"] >= query_budget["max"]:
             LOGGER.warning(
@@ -1087,7 +1273,169 @@ class BanxicoMatrixApiConnector:
                 query_budget["max"],
             )
 
+        if facts:
+            try:
+                self._persist_topology_cache(
+                    metric=job.metric,
+                    members_by_unique=members_by_unique,
+                    chapter_uniques=chapter_uniques,
+                    frontier_by_chapter=confirmed_frontier_by_chapter,
+                    persist_frontier=self.cache_persist_frontier,
+                    cache_snapshot=cache_snapshot,
+                )
+            except Exception as exc:
+                LOGGER.warning("Banxico API: no se pudo persistir la caché de topología: %s", exc)
+
         return facts, members_by_unique, countries
+
+    @staticmethod
+    def _member_from_cache_entry(payload: dict[str, Any]) -> _MemberRecord:
+        return _MemberRecord(
+            index=-1,
+            parent_index=None,
+            level=payload.get("level"),
+            caption=payload.get("caption") or payload.get("unique_name") or "",
+            unique_name=payload.get("unique_name") or "",
+            raw_type=payload.get("raw_type") or "",
+            raw_parts=list(payload.get("raw_parts") or []),
+            parent_unique_name=payload.get("parent_unique_name"),
+        )
+
+    def _build_cached_frontier_tasks(
+            self,
+            frontier_by_chapter: dict[str, list[str]],
+            *,
+            chapter_uniques: list[str],
+            members_by_unique: dict[str, _MemberRecord],
+    ) -> list[FrontierTask]:
+        tasks: list[FrontierTask] = []
+        total_chapters = len(chapter_uniques)
+        for pos, chapter_unique in enumerate(chapter_uniques, start=1):
+            frontier_values = self._sort_member_uniques(
+                self._dedupe_preserve(frontier_by_chapter.get(chapter_unique, [])),
+                members_by_unique,
+            )
+            for idx, current_unique in enumerate(frontier_values):
+                tasks.append(
+                    FrontierTask(
+                        chapter_unique=chapter_unique,
+                        current_unique=current_unique,
+                        position=pos,
+                        total_chapters=total_chapters,
+                        leaf_hits=0,
+                        fact_hits=0,
+                        should_log=(idx == 0 and (pos == 1 or pos % max(1, int(self.config.get("api_log_every", 25))) == 0 or pos == total_chapters)),
+                    )
+                )
+        return tasks
+
+    def _persist_topology_cache(
+            self,
+            *,
+            metric: str,
+            members_by_unique: dict[str, _MemberRecord],
+            chapter_uniques: list[str],
+            frontier_by_chapter: dict[str, set[str]],
+            persist_frontier: bool,
+            cache_snapshot: CachedTopologySnapshot | None = None,
+    ) -> None:
+        chapter_set = set(chapter_uniques)
+        members_rows: list[dict[str, Any]] = []
+        edges_rows: list[dict[str, Any]] = []
+
+        for unique_name, member in members_by_unique.items():
+            if not self._is_product_member(member):
+                continue
+            chapter_unique = self._infer_member_chapter_unique(
+                members_by_unique,
+                unique_name,
+                chapter_set,
+            )
+            members_rows.append(
+                {
+                    "unique_name": unique_name,
+                    "caption": member.caption,
+                    "parent_unique_name": member.parent_unique_name,
+                    "level": member.level,
+                    "raw_type": member.raw_type,
+                    "raw_parts_json": json.dumps(member.raw_parts, ensure_ascii=False),
+                    "chapter_unique": chapter_unique,
+                }
+            )
+            if member.parent_unique_name:
+                edges_rows.append(
+                    {
+                        "parent_unique_name": member.parent_unique_name,
+                        "child_unique_name": unique_name,
+                        "chapter_unique": chapter_unique,
+                    }
+                )
+
+        frontier_rows: list[dict[str, Any]] = []
+        if persist_frontier:
+            for chapter_unique, values in frontier_by_chapter.items():
+                for unique_name in self._sort_member_uniques(self._dedupe_preserve(list(values)), members_by_unique):
+                    member = members_by_unique.get(unique_name)
+                    frontier_rows.append(
+                        {
+                            "metric": metric,
+                            "chapter_unique": chapter_unique,
+                            "frontier_unique": unique_name,
+                            "level": member.level if member else None,
+                        }
+                    )
+
+        should_persist, persist_info = self.topology_cache.should_persist(
+            snapshot=cache_snapshot,
+            members_rows=members_rows,
+            frontier_rows=frontier_rows,
+            persist_frontier=persist_frontier,
+        )
+
+        if self.cache_skip_persist_if_unchanged and not should_persist:
+            if self.trace:
+                self.trace.incr("api_topology_cache_persist_skipped_noop", 1)
+                if not persist_info.get("members_changed", False):
+                    self.trace.incr("api_topology_cache_members_unchanged", len(members_rows))
+                if persist_frontier and not persist_info.get("frontier_changed", False):
+                    self.trace.incr("api_topology_cache_frontier_unchanged", len(frontier_rows))
+            LOGGER.info(
+                "Banxico API: caché de topología sin cambios (%d miembros, %d frontera); se omite persistencia",
+                len(members_rows),
+                len(frontier_rows),
+            )
+            return
+
+        self.topology_cache.persist(
+            metric=metric,
+            members_rows=members_rows,
+            edges_rows=edges_rows,
+            frontier_rows=frontier_rows,
+            chapters_count=len(chapter_uniques),
+            persist_frontier=persist_frontier,
+        )
+
+        if self.trace:
+            self.trace.incr("api_topology_cache_members_persisted", len(members_rows))
+            self.trace.incr("api_topology_cache_frontier_persisted", len(frontier_rows))
+            if should_persist:
+                self.trace.incr("api_topology_cache_persist_writes", 1)
+
+    def _infer_member_chapter_unique(
+            self,
+            members_by_unique: dict[str, _MemberRecord],
+            unique_name: str,
+            chapter_uniques: set[str],
+    ) -> str | None:
+        current = unique_name
+        while current:
+            if current in chapter_uniques:
+                return current
+            member = members_by_unique.get(current)
+            if member is None:
+                return None
+            current = member.parent_unique_name
+        return None
 
     def _chapter_seed_stats(
             self,
@@ -1135,28 +1483,28 @@ class BanxicoMatrixApiConnector:
             base_payload: dict[str, Any],
             current_unique: str,
             members_by_unique: dict[str, _MemberRecord],
-            facts: dict[tuple[str, str], float],
-            countries: dict[str, str],
-            query_budget: dict[str, int],
-    ) -> tuple[list[str], bool]:
+    ) -> _ExpansionOutcome:
         current_member = members_by_unique.get(current_unique)
         if current_member and current_member.level is not None and current_member.level >= 5:
-            return [], False
-
-        if query_budget["count"] >= query_budget["max"]:
-            return [], False
+            return _ExpansionOutcome(next_targets=[], queried=False)
 
         explicit_products = [self._root_product_unique(members_by_unique)]
         explicit_products.extend(self._ancestor_chain(members_by_unique, current_unique))
         explicit_products.append(current_unique)
 
-        payload = self._build_product_payload(
-            base_payload,
-            explicit_products=explicit_products,
-            descendants_products=[current_unique],
-        )
+        if template.payload_builder is not None:
+            payload = template.payload_builder.build_product_payload(
+                base_payload,
+                explicit_products=explicit_products,
+                descendants_products=[current_unique],
+            )
+        else:
+            payload = self._build_product_payload(
+                base_payload,
+                explicit_products=explicit_products,
+                descendants_products=[current_unique],
+            )
 
-        query_budget["count"] += 1
         try:
             response_obj = self._query_job(template, job, payload_override=payload)
             parsed = self._response_to_facts(response_obj)
@@ -1166,16 +1514,10 @@ class BanxicoMatrixApiConnector:
                 self._caption_from_unique(current_unique),
                 exc,
             )
-            return [], True
-        self._merge_response_state(parsed, members_by_unique, facts, countries)
+            return _ExpansionOutcome(next_targets=[], queried=True, transient_error=str(exc))
 
         combined_members = dict(members_by_unique)
         combined_members.update(parsed.members_by_unique)
-
-        current_member = combined_members.get(current_unique)
-        current_level = current_member.level if current_member else None
-        if current_level is not None and current_level >= 5:
-            return [], True
 
         immediate_children = [
             unique_name
@@ -1187,7 +1529,7 @@ class BanxicoMatrixApiConnector:
             combined_members,
         )
         if not immediate_children:
-            return [], True
+            return _ExpansionOutcome(next_targets=[], queried=True, parsed=parsed)
 
         visible_parent_set = {
             member.parent_unique_name
@@ -1204,9 +1546,6 @@ class BanxicoMatrixApiConnector:
                 continue
             has_visible_children = child_unique in visible_parent_set
 
-            # Priorizar amplitud útil: solo reprogramar hijos que realmente parezcan
-            # frontera o cuya respuesta esté saturada. Evitar profundizar por el mero
-            # hecho de que el hijo tenga hechos, porque eso dispara miles de consultas.
             if saturated:
                 next_targets.append(child_unique)
                 continue
@@ -1223,7 +1562,7 @@ class BanxicoMatrixApiConnector:
             self._dedupe_preserve(next_targets),
             combined_members,
         )
-        return next_targets, True
+        return _ExpansionOutcome(next_targets=next_targets, queried=True, parsed=parsed)
 
     def _build_product_payload(
             self,
@@ -1232,19 +1571,12 @@ class BanxicoMatrixApiConnector:
             explicit_products: list[str],
             descendants_products: list[str],
     ) -> dict[str, Any]:
-        payload = copy.deepcopy(base_payload)
-        qom = payload["query"]["arguments"][0]["qom"]
-        product_attr = qom["columns"]["attributes"][0]
-        selection_list: list[dict[str, Any]] = []
-
-        for unique_name in self._dedupe_preserve(explicit_products):
-            selection_list.append(self._make_explicit_selection(unique_name))
-        for unique_name in self._dedupe_preserve(descendants_products):
-            selection_list.append(self._make_descendants_selection(unique_name))
-
-        product_attr["elementSelectionList"] = copy.deepcopy(selection_list)
-        self._sync_product_selection_mirrors(payload, selection_list)
-        return payload
+        builder = BanxicoPayloadBuilder.from_payload(base_payload)
+        return builder.build_product_payload(
+            base_payload,
+            explicit_products=explicit_products,
+            descendants_products=descendants_products,
+        )
 
     def _sync_product_selection_mirrors(
             self,
@@ -1708,3 +2040,9 @@ class BanxicoMatrixApiConnector:
 
         return sorted(unique_names, key=sort_key)
 
+class _nullcontext:
+    def __enter__(self):
+        return None
+
+    def __exit__(self, exc_type, exc, tb):
+        return False

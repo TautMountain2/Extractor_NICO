@@ -1,0 +1,127 @@
+raw_name,canonical_name_es,canonical_name_en,iso2,iso3,is_aggregate,aggregate_kind,priority,notes
+Estados Unidos de América,Estados Unidos de América,United States of America,US,USA,false,,100,nombre oficial en español
+Estados Unidos,Estados Unidos de América,United States of America,US,USA,false,,100,alias común
+EE UU,Estados Unidos de América,United States of America,US,USA,false,,100,abreviatura sin puntos
+EE. UU.,Estados Unidos de América,United States of America,US,USA,false,,100,abreviatura con puntos
+EEUU,Estados Unidos de América,United States of America,US,USA,false,,100,abreviatura compacta
+EUA,Estados Unidos de América,United States of America,US,USA,false,,100,abreviatura común en México
+U.S.A.,Estados Unidos de América,United States of America,US,USA,false,,100,abreviatura en inglés
+USA,Estados Unidos de América,United States of America,US,USA,false,,100,abreviatura en inglés
+United States,Estados Unidos de América,United States of America,US,USA,false,,100,alias en inglés
+United States of America,Estados Unidos de América,United States of America,US,USA,false,,100,nombre oficial en inglés
+China,China,China,CN,CHN,false,,100,nombre principal
+República Popular China,China,China,CN,CHN,false,,100,nombre oficial alterno
+People's Republic of China,China,China,CN,CHN,false,,100,nombre en inglés
+Hong Kong,Hong Kong,Hong Kong,HK,HKG,false,,100,RAE de China
+Hong Kong SAR,Hong Kong,Hong Kong,HK,HKG,false,,100,alias comercial
+China Hong Kong SAR,Hong Kong,Hong Kong,HK,HKG,false,,100,alias comercial
+Macao,Macao,Macao,MO,MAC,false,,100,RAE de China
+Macao SAR,Macao,Macao,MO,MAC,false,,100,alias comercial
+China Macao SAR,Macao,Macao,MO,MAC,false,,100,alias comercial
+Taiwán,Taiwán,Taiwan,TW,TWN,false,,100,nombre en español
+Taiwan,Taiwán,Taiwan,TW,TWN,false,,100,nombre en inglés
+Chinese Taipei,Taiwán,Taiwan,TW,TWN,false,,100,alias comercial
+Taipei Chino,Taiwán,Taiwan,TW,TWN,false,,100,alias comercial en español
+República de Corea,Corea del Sur,Korea Republic of,KR,KOR,false,,100,nombre oficial en español
+Corea del Sur,Corea del Sur,Korea Republic of,KR,KOR,false,,100,alias común
+"Corea, República de",Corea del Sur,Korea Republic of,KR,KOR,false,,100,alias invertido
+"Korea, Republic of",Corea del Sur,Korea Republic of,KR,KOR,false,,100,alias en inglés
+South Korea,Corea del Sur,Korea Republic of,KR,KOR,false,,100,alias en inglés
+República Popular Democrática de Corea,Corea del Norte,Korea Democratic People's Republic of,KP,PRK,false,,100,nombre oficial
+Corea del Norte,Corea del Norte,Korea Democratic People's Republic of,KP,PRK,false,,100,alias común
+"Korea, Democratic People's Republic of",Corea del Norte,Korea Democratic People's Republic of,KP,PRK,false,,100,alias en inglés
+Japón,Japón,Japan,JP,JPN,false,,100,nombre en español
+Japan,Japón,Japan,JP,JPN,false,,100,nombre en inglés
+México,México,Mexico,MX,MEX,false,,100,nombre principal
+Mexico,México,Mexico,MX,MEX,false,,100,variación sin acento
+Canadá,Canadá,Canada,CA,CAN,false,,100,nombre principal
+Canada,Canadá,Canada,CA,CAN,false,,100,nombre en inglés
+Alemania,Alemania,Germany,DE,DEU,false,,100,nombre en español
+Germany,Alemania,Germany,DE,DEU,false,,100,nombre en inglés
+Francia,Francia,France,FR,FRA,false,,100,nombre principal
+France,Francia,France,FR,FRA,false,,100,nombre en inglés
+Italia,Italia,Italy,IT,ITA,false,,100,nombre principal
+Italy,Italia,Italy,IT,ITA,false,,100,nombre en inglés
+España,España,Spain,ES,ESP,false,,100,nombre principal
+Spain,España,Spain,ES,ESP,false,,100,nombre en inglés
+Reino Unido,Reino Unido,United Kingdom,GB,GBR,false,,100,alias común
+Reino Unido de Gran Bretaña e Irlanda del Norte,Reino Unido,United Kingdom,GB,GBR,false,,100,nombre oficial en español
+United Kingdom,Reino Unido,United Kingdom,GB,GBR,false,,100,nombre en inglés
+United Kingdom of Great Britain and Northern Ireland,Reino Unido,United Kingdom,GB,GBR,false,,100,nombre oficial en inglés
+UK,Reino Unido,United Kingdom,GB,GBR,false,,100,abreviatura
+U.K.,Reino Unido,United Kingdom,GB,GBR,false,,100,abreviatura con puntos
+Gran Bretaña,Reino Unido,United Kingdom,GB,GBR,false,,80,alias coloquial
+Países Bajos,Países Bajos,Netherlands,NL,NLD,false,,100,nombre oficial en español
+Netherlands,Países Bajos,Netherlands,NL,NLD,false,,100,nombre en inglés
+Holanda,Países Bajos,Netherlands,NL,NLD,false,,100,alias común
+Holland,Países Bajos,Netherlands,NL,NLD,false,,100,alias común en inglés
+Bélgica,Bélgica,Belgium,BE,BEL,false,,100,nombre principal
+Belgium,Bélgica,Belgium,BE,BEL,false,,100,nombre en inglés
+Suiza,Suiza,Switzerland,CH,CHE,false,,100,nombre principal
+Switzerland,Suiza,Switzerland,CH,CHE,false,,100,nombre en inglés
+Austria,Austria,Austria,AT,AUT,false,,100,nombre principal
+Irlanda,Irlanda,Ireland,IE,IRL,false,,100,nombre principal
+Portugal,Portugal,Portugal,PT,PRT,false,,100,nombre principal
+Dinamarca,Dinamarca,Denmark,DK,DNK,false,,100,nombre principal
+Suecia,Suecia,Sweden,SE,SWE,false,,100,nombre principal
+Noruega,Noruega,Norway,NO,NOR,false,,100,nombre principal
+Finlandia,Finlandia,Finland,FI,FIN,false,,100,nombre principal
+Polonia,Polonia,Poland,PL,POL,false,,100,nombre principal
+República Checa,República Checa,Czechia,CZ,CZE,false,,100,alias tradicional
+Czech Republic,República Checa,Czechia,CZ,CZE,false,,100,alias en inglés
+Czechia,República Checa,Czechia,CZ,CZE,false,,100,nombre corto actual
+Türkiye,Turquía,Turkey,TR,TUR,false,,100,nombre oficial actual
+Turquía,Turquía,Turkey,TR,TUR,false,,100,nombre en español
+Turkey,Turquía,Turkey,TR,TUR,false,,100,nombre en inglés
+Federación de Rusia,Rusia,Russian Federation,RU,RUS,false,,100,nombre oficial en español
+Rusia,Rusia,Russian Federation,RU,RUS,false,,100,alias común
+Russian Federation,Rusia,Russian Federation,RU,RUS,false,,100,nombre oficial en inglés
+Brasil,Brasil,Brazil,BR,BRA,false,,100,nombre principal
+Brazil,Brasil,Brazil,BR,BRA,false,,100,nombre en inglés
+Argentina,Argentina,Argentina,AR,ARG,false,,100,nombre principal
+Chile,Chile,Chile,CL,CHL,false,,100,nombre principal
+Colombia,Colombia,Colombia,CO,COL,false,,100,nombre principal
+Perú,Perú,Peru,PE,PER,false,,100,nombre principal
+Peru,Perú,Peru,PE,PER,false,,100,variación sin acento
+India,India,India,IN,IND,false,,100,nombre principal
+Vietnam,Vietnam,Vietnam,VN,VNM,false,,100,nombre principal
+Malasia,Malasia,Malaysia,MY,MYS,false,,100,nombre principal
+Malaysia,Malasia,Malaysia,MY,MYS,false,,100,nombre en inglés
+Tailandia,Tailandia,Thailand,TH,THA,false,,100,nombre principal
+Thailand,Tailandia,Thailand,TH,THA,false,,100,nombre en inglés
+Singapur,Singapur,Singapore,SG,SGP,false,,100,nombre principal
+Singapore,Singapur,Singapore,SG,SGP,false,,100,nombre en inglés
+Indonesia,Indonesia,Indonesia,ID,IDN,false,,100,nombre principal
+Filipinas,Filipinas,Philippines,PH,PHL,false,,100,nombre principal
+Philippines,Filipinas,Philippines,PH,PHL,false,,100,nombre en inglés
+Emiratos Árabes Unidos,Emiratos Árabes Unidos,United Arab Emirates,AE,ARE,false,,100,nombre principal
+United Arab Emirates,Emiratos Árabes Unidos,United Arab Emirates,AE,ARE,false,,100,nombre en inglés
+EAU,Emiratos Árabes Unidos,United Arab Emirates,AE,ARE,false,,100,abreviatura en español
+Arabia Saudita,Arabia Saudita,Saudi Arabia,SA,SAU,false,,100,nombre principal
+Saudi Arabia,Arabia Saudita,Saudi Arabia,SA,SAU,false,,100,nombre en inglés
+Sudáfrica,Sudáfrica,South Africa,ZA,ZAF,false,,100,nombre principal
+South Africa,Sudáfrica,South Africa,ZA,ZAF,false,,100,nombre en inglés
+Australia,Australia,Australia,AU,AUS,false,,100,nombre principal
+Nueva Zelanda,Nueva Zelanda,New Zealand,NZ,NZL,false,,100,nombre principal
+Mundo,Mundo,World,,,true,world,100,agregado global
+World Total,Mundo,World,,,true,world,100,agregado fuente
+Total mundial,Mundo,World,,,true,world,100,agregado fuente
+Resto del mundo,Resto del mundo,Rest of World,,,true,rest_of_world,100,agregado fuente
+Otros países,Otros países,Other Countries,,,true,other_countries,100,agregado fuente
+Otros países no declarados,Otros países no declarados,Undeclared Other Countries,,,true,undeclared_other_countries,100,agregado fuente
+No declarados,No declarados,Undeclared,,,true,undeclared,100,agregado fuente
+Unión Europea,Unión Europea,European Union,,,true,bloc,100,bloque económico
+Union Europea,Unión Europea,European Union,,,true,bloc,100,variación sin acento
+European Union,Unión Europea,European Union,,,true,bloc,100,bloque económico
+Zona euro,Zona euro,Euro Area,,,true,bloc,100,bloque económico
+Euro Area,Zona euro,Euro Area,,,true,bloc,100,bloque económico
+Otros países no declarados de la Unión Europea,Otros países no declarados de la Unión Europea,Undeclared Other Countries of the European Union,,,true,regional_unknown,100,agregado fuente
+Latinoamérica y Antillas,Latinoamérica y Antillas,Latin America and Caribbean,,,true,region,100,agregado regional
+America Latina y Antillas,Latinoamérica y Antillas,Latin America and Caribbean,,,true,region,100,variación sin acento
+Europa,Europa,Europe,,,true,region,100,agregado regional
+Asia,Asia,Asia,,,true,region,100,agregado regional
+África y Oceanía,África y Oceanía,Africa and Oceania,,,true,region,100,agregado regional
+Africa y Oceania,África y Oceanía,Africa and Oceania,,,true,region,100,variación sin acento
+América del Norte,América del Norte,North America,,,true,region,100,agregado regional
+America del Norte,América del Norte,North America,,,true,region,100,variación sin acento
+Todas las regiones,Todas las regiones,All Regions,,,true,region,100,agregado fuente

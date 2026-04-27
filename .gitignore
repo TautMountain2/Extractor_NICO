@@ -22,6 +22,7 @@ data/logs/*
 *.duckdb
 *.parquet
 *.csv
+!config/catalogs/country_aliases.csv
 *.xlsx
 *.xls
 *.dta
@@ -31,3 +32,4 @@ data/logs/*
 # Empaquetado de Python
 *.egg-info/
 .eggs/
+logs/

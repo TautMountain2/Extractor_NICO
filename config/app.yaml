@@ -21,6 +21,14 @@ sources:
     max_visible_expands: 120
     preferred_mode: api
     fallback_browser: true
+    api_http_pool_maxsize: 6
+    api_http_connect_timeout_seconds: 15
+    api_parallelism: 6
+    api_topology_cache_enabled: true
+    api_topology_cache_mode: members_only
+    api_topology_cache_use_frontier: false
+    api_topology_cache_persist_frontier: false
+    api_topology_cache_skip_persist_if_unchanged: true
   inegi_bcmm:
     enabled: true
     mode: manual_or_browser
