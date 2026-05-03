@@ -113,19 +113,16 @@ class Synchronizer:
                 with (trace.stage("sync.connector_run", metric=metric_item, mode=preferred_mode) if trace else _nullcontext()):
                     results = connector.run_jobs(jobs)
             except Exception as exc:
-                LOGGER.error("Conector Banxico (%s) falló a nivel batch: %s", preferred_mode, exc)
-                if trace:
-                    trace.event("connector_batch_failed", mode=preferred_mode, error=str(exc))
+                LOGGER.error("Conector Banxico (api) falló a nivel batch: %s", exc)
 
-                if preferred_mode == "api" and fallback_browser:
-                    LOGGER.warning("Aplicando fallback Banxico hacia Playwright visual")
-                    if trace:
-                        trace.event("connector_fallback_browser")
-                    connector = BanxicoMatrixBrowserConnector(self.settings)
-                    with (trace.stage("sync.connector_run_fallback_browser", metric=metric_item) if trace else _nullcontext()):
-                        results = connector.run_jobs(jobs)
-                else:
-                    raise
+                if not fallback_browser:
+                    raise RuntimeError(
+                        "El conector API de Banxico falló y el fallback visual está deshabilitado por configuración."
+                    ) from exc
+
+                LOGGER.warning("Aplicando fallback Banxico hacia Playwright visual")
+                browser_connector = BanxicoMatrixBrowserConnector(self.settings, trace=trace)
+                results = browser_connector.run_jobs(jobs)
 
             for result in results:
                 load_run_id, _ = run_ids[result.job.job_id]

@@ -75,3 +75,26 @@ def test_banxico_parser_resolves_metric_from_generic_source(tmp_path: Path):
     assert observations[0].source_code == "BANXICO_VALUE_USD"
     assert observations[0].value_usd == 7.0
     assert observations[0].quantity is None
+
+
+def test_banxico_parser_reads_simple_volume_matrix(tmp_path: Path):
+    path = tmp_path / "banxico_volume_export_2022_01.xlsx"
+    df = pd.DataFrame(
+        [
+            ["Cubo de Información de Comercio Exterior - Valor volumen", None, None],
+            ["Exportación", "Enero 2022", None],
+            ["Producto", "Estados Unidos", "Canadá"],
+            ["08044001 Aguacates", 100.5, 20.0],
+            ["08045002 Guayabas", 10.0, None],
+        ]
+    )
+    df.to_excel(path, index=False, header=False)
+    catalog = _build_catalog(tmp_path)
+    parser = BanxicoCubeExportParser()
+    observations = parser.parse(path, catalog, source_code="BANXICO_BROWSER")
+    assert len(observations) == 3
+    assert observations[0].flow_code == "EXPORT"
+    assert observations[0].quantity == 100.5
+    assert observations[0].value_usd is None
+    assert observations[0].source_code == "BANXICO_VOLUME"
+    assert observations[0].fraccion8 == "08044001"

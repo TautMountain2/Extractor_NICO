@@ -20,7 +20,7 @@ sources:
     expand_visible_nodes: true
     max_visible_expands: 120
     preferred_mode: api
-    fallback_browser: true
+    fallback_browser: false
     api_http_pool_maxsize: 6
     api_http_connect_timeout_seconds: 15
     api_parallelism: 6

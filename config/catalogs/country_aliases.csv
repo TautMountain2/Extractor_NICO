@@ -1,127 +1,203 @@
 raw_name,canonical_name_es,canonical_name_en,iso2,iso3,is_aggregate,aggregate_kind,priority,notes
-Estados Unidos de América,Estados Unidos de América,United States of America,US,USA,false,,100,nombre oficial en español
-Estados Unidos,Estados Unidos de América,United States of America,US,USA,false,,100,alias común
+Africa y Oceania,África y Oceanía,Africa and Oceania,,,true,region,100,variación sin acento
+Alemania,Alemania,Germany,DE,DEU,false,,100,nombre en español
+America Latina y Antillas,Latinoamérica y Antillas,Latin America and Caribbean,,,true,region,100,variación sin acento
+America del Norte,América del Norte,North America,,,true,region,100,variación sin acento
+América del Norte,América del Norte,North America,,,true,region,100,agregado regional
+Antigua y Barbuda,Antigua y Barbuda,Antigua and Barbuda,AG,ATG,false,,100,alias Banxico en español
+Antillas Neerlandesas,Antillas Neerlandesas,Netherlands Antilles,AN,ANT,false,,60,entidad histórica/obsoleta
+Arabia Saudita,Arabia Saudita,Saudi Arabia,SA,SAU,false,,100,nombre principal
+Argelia,Argelia,Algeria,DZ,DZA,false,,100,alias Banxico en español
+Argentina,Argentina,Argentina,AR,ARG,false,,100,nombre principal
+Asia,Asia,Asia,,,true,region,100,agregado regional
+Australia,Australia,Australia,AU,AUS,false,,100,nombre principal
+Austria,Austria,Austria,AT,AUT,false,,100,nombre principal
+Azerbaiyán,Azerbaiyán,Azerbaijan,AZ,AZE,false,,100,alias Banxico en español
+Bahréin,Baréin,Bahrain,BH,BHR,false,,95,variante ortográfica
+Belgium,Bélgica,Belgium,BE,BEL,false,,100,nombre en inglés
+Belice,Belice,Belize,BZ,BLZ,false,,100,alias Banxico en español
+Bermudas,Bermudas,Bermuda,BM,BMU,false,,100,territorio
+Bielorrusia,Bielorrusia,Belarus,BY,BLR,false,,100,alias Banxico en español
+Bosnia y Herzegovina,Bosnia y Herzegovina,Bosnia and Herzegovina,BA,BIH,false,,100,alias Banxico en español
+Brasil,Brasil,Brazil,BR,BRA,false,,100,nombre principal
+Brazil,Brasil,Brazil,BR,BRA,false,,100,nombre en inglés
+Bélgica,Bélgica,Belgium,BE,BEL,false,,100,nombre principal
+Camboya,Camboya,Cambodia,KH,KHM,false,,100,alias Banxico en español
+Camerún,Camerún,Cameroon,CM,CMR,false,,100,alias Banxico en español
+Canada,Canadá,Canada,CA,CAN,false,,100,nombre en inglés
+Canadá,Canadá,Canada,CA,CAN,false,,100,nombre principal
+Chile,Chile,Chile,CL,CHL,false,,100,nombre principal
+China,China,China,CN,CHN,false,,100,nombre principal
+China Hong Kong SAR,Hong Kong,Hong Kong,HK,HKG,false,,100,alias comercial
+China Macao SAR,Macao,Macao,MO,MAC,false,,100,alias comercial
+Chinese Taipei,Taiwán,Taiwan,TW,TWN,false,,100,alias comercial
+Chipre,Chipre,Cyprus,CY,CYP,false,,100,alias Banxico en español
+Colombia,Colombia,Colombia,CO,COL,false,,100,nombre principal
+Corea del Norte,Corea del Norte,Korea Democratic People's Republic of,KP,PRK,false,,100,alias común
+Corea del Sur,Corea del Sur,Korea Republic of,KR,KOR,false,,100,alias común
+"Corea, República de",Corea del Sur,Korea Republic of,KR,KOR,false,,100,alias invertido
+Costa de Marfil,Costa de Marfil,Côte d'Ivoire,CI,CIV,false,,100,exónimo español
+Croacia,Croacia,Croatia,HR,HRV,false,,100,alias Banxico en español
+Curazao,Curazao,Curaçao,CW,CUW,false,,100,territorio
+Czech Republic,República Checa,Czechia,CZ,CZE,false,,100,alias en inglés
+Czechia,República Checa,Czechia,CZ,CZE,false,,100,nombre corto actual
+Dinamarca,Dinamarca,Denmark,DK,DNK,false,,100,nombre principal
+EAU,Emiratos Árabes Unidos,United Arab Emirates,AE,ARE,false,,100,abreviatura en español
 EE UU,Estados Unidos de América,United States of America,US,USA,false,,100,abreviatura sin puntos
 EE. UU.,Estados Unidos de América,United States of America,US,USA,false,,100,abreviatura con puntos
 EEUU,Estados Unidos de América,United States of America,US,USA,false,,100,abreviatura compacta
 EUA,Estados Unidos de América,United States of America,US,USA,false,,100,abreviatura común en México
-U.S.A.,Estados Unidos de América,United States of America,US,USA,false,,100,abreviatura en inglés
-USA,Estados Unidos de América,United States of America,US,USA,false,,100,abreviatura en inglés
-United States,Estados Unidos de América,United States of America,US,USA,false,,100,alias en inglés
-United States of America,Estados Unidos de América,United States of America,US,USA,false,,100,nombre oficial en inglés
-China,China,China,CN,CHN,false,,100,nombre principal
-República Popular China,China,China,CN,CHN,false,,100,nombre oficial alterno
-People's Republic of China,China,China,CN,CHN,false,,100,nombre en inglés
-Hong Kong,Hong Kong,Hong Kong,HK,HKG,false,,100,RAE de China
-Hong Kong SAR,Hong Kong,Hong Kong,HK,HKG,false,,100,alias comercial
-China Hong Kong SAR,Hong Kong,Hong Kong,HK,HKG,false,,100,alias comercial
-Macao,Macao,Macao,MO,MAC,false,,100,RAE de China
-Macao SAR,Macao,Macao,MO,MAC,false,,100,alias comercial
-China Macao SAR,Macao,Macao,MO,MAC,false,,100,alias comercial
-Taiwán,Taiwán,Taiwan,TW,TWN,false,,100,nombre en español
-Taiwan,Taiwán,Taiwan,TW,TWN,false,,100,nombre en inglés
-Chinese Taipei,Taiwán,Taiwan,TW,TWN,false,,100,alias comercial
-Taipei Chino,Taiwán,Taiwan,TW,TWN,false,,100,alias comercial en español
-República de Corea,Corea del Sur,Korea Republic of,KR,KOR,false,,100,nombre oficial en español
-Corea del Sur,Corea del Sur,Korea Republic of,KR,KOR,false,,100,alias común
-"Corea, República de",Corea del Sur,Korea Republic of,KR,KOR,false,,100,alias invertido
-"Korea, Republic of",Corea del Sur,Korea Republic of,KR,KOR,false,,100,alias en inglés
-South Korea,Corea del Sur,Korea Republic of,KR,KOR,false,,100,alias en inglés
-República Popular Democrática de Corea,Corea del Norte,Korea Democratic People's Republic of,KP,PRK,false,,100,nombre oficial
-Corea del Norte,Corea del Norte,Korea Democratic People's Republic of,KP,PRK,false,,100,alias común
-"Korea, Democratic People's Republic of",Corea del Norte,Korea Democratic People's Republic of,KP,PRK,false,,100,alias en inglés
-Japón,Japón,Japan,JP,JPN,false,,100,nombre en español
-Japan,Japón,Japan,JP,JPN,false,,100,nombre en inglés
-México,México,Mexico,MX,MEX,false,,100,nombre principal
-Mexico,México,Mexico,MX,MEX,false,,100,variación sin acento
-Canadá,Canadá,Canada,CA,CAN,false,,100,nombre principal
-Canada,Canadá,Canada,CA,CAN,false,,100,nombre en inglés
-Alemania,Alemania,Germany,DE,DEU,false,,100,nombre en español
-Germany,Alemania,Germany,DE,DEU,false,,100,nombre en inglés
-Francia,Francia,France,FR,FRA,false,,100,nombre principal
-France,Francia,France,FR,FRA,false,,100,nombre en inglés
-Italia,Italia,Italy,IT,ITA,false,,100,nombre principal
-Italy,Italia,Italy,IT,ITA,false,,100,nombre en inglés
+Egipto,Egipto,Egypt,EG,EGY,false,,100,alias Banxico en español
+Emiratos Árabes Unidos,Emiratos Árabes Unidos,United Arab Emirates,AE,ARE,false,,100,nombre principal
+Eslovenia,Eslovenia,Slovenia,SI,SVN,false,,100,alias Banxico en español
 España,España,Spain,ES,ESP,false,,100,nombre principal
-Spain,España,Spain,ES,ESP,false,,100,nombre en inglés
-Reino Unido,Reino Unido,United Kingdom,GB,GBR,false,,100,alias común
-Reino Unido de Gran Bretaña e Irlanda del Norte,Reino Unido,United Kingdom,GB,GBR,false,,100,nombre oficial en español
-United Kingdom,Reino Unido,United Kingdom,GB,GBR,false,,100,nombre en inglés
-United Kingdom of Great Britain and Northern Ireland,Reino Unido,United Kingdom,GB,GBR,false,,100,nombre oficial en inglés
-UK,Reino Unido,United Kingdom,GB,GBR,false,,100,abreviatura
-U.K.,Reino Unido,United Kingdom,GB,GBR,false,,100,abreviatura con puntos
+Estado Micronesia,Estados Federados de Micronesia,"Micronesia, Federated States of",FM,FSM,false,,95,nombre portal abreviado
+Estados Unidos,Estados Unidos de América,United States of America,US,USA,false,,100,alias común
+Estados Unidos de América,Estados Unidos de América,United States of America,US,USA,false,,100,nombre oficial en español
+Etiopía,Etiopía,Ethiopia,ET,ETH,false,,100,alias Banxico en español
+Euro Area,Zona euro,Euro Area,,,true,bloc,100,bloque económico
+Europa,Europa,Europe,,,true,region,100,agregado regional
+European Union,Unión Europea,European Union,,,true,bloc,100,bloque económico
+Federación Rusa,Rusia,Russian Federation,RU,RUS,false,,95,nombre oficial
+Federación de Rusia,Rusia,Russian Federation,RU,RUS,false,,100,nombre oficial en español
+Filipinas,Filipinas,Philippines,PH,PHL,false,,100,nombre principal
+Finlandia,Finlandia,Finland,FI,FIN,false,,100,nombre principal
+Fiyi,Fiyi,Fiji,FJ,FJI,false,,100,alias Banxico en español
+France,Francia,France,FR,FRA,false,,100,nombre en inglés
+Francia,Francia,France,FR,FRA,false,,100,nombre principal
+Germany,Alemania,Germany,DE,DEU,false,,100,nombre en inglés
 Gran Bretaña,Reino Unido,United Kingdom,GB,GBR,false,,80,alias coloquial
-Países Bajos,Países Bajos,Netherlands,NL,NLD,false,,100,nombre oficial en español
-Netherlands,Países Bajos,Netherlands,NL,NLD,false,,100,nombre en inglés
+Granada,Granada,Grenada,GD,GRD,false,,100,alias Banxico en español
+Grecia,Grecia,Greece,GR,GRC,false,,100,alias Banxico en español
+Guadalupe y Dependencias,Guadalupe,Guadeloupe,GP,GLP,false,,70,revisión recomendada; portal agrega 'y Dependencias'
+Guinea Ecuatorial,Guinea Ecuatorial,Equatorial Guinea,GQ,GNQ,false,,100,alias Banxico en español
+Guyana Francesa,Guayana Francesa,French Guiana,GF,GUF,false,,95,variante ortográfica
 Holanda,Países Bajos,Netherlands,NL,NLD,false,,100,alias común
 Holland,Países Bajos,Netherlands,NL,NLD,false,,100,alias común en inglés
-Bélgica,Bélgica,Belgium,BE,BEL,false,,100,nombre principal
-Belgium,Bélgica,Belgium,BE,BEL,false,,100,nombre en inglés
-Suiza,Suiza,Switzerland,CH,CHE,false,,100,nombre principal
-Switzerland,Suiza,Switzerland,CH,CHE,false,,100,nombre en inglés
-Austria,Austria,Austria,AT,AUT,false,,100,nombre principal
-Irlanda,Irlanda,Ireland,IE,IRL,false,,100,nombre principal
-Portugal,Portugal,Portugal,PT,PRT,false,,100,nombre principal
-Dinamarca,Dinamarca,Denmark,DK,DNK,false,,100,nombre principal
-Suecia,Suecia,Sweden,SE,SWE,false,,100,nombre principal
-Noruega,Noruega,Norway,NO,NOR,false,,100,nombre principal
-Finlandia,Finlandia,Finland,FI,FIN,false,,100,nombre principal
-Polonia,Polonia,Poland,PL,POL,false,,100,nombre principal
-República Checa,República Checa,Czechia,CZ,CZE,false,,100,alias tradicional
-Czech Republic,República Checa,Czechia,CZ,CZE,false,,100,alias en inglés
-Czechia,República Checa,Czechia,CZ,CZE,false,,100,nombre corto actual
-Türkiye,Turquía,Turkey,TR,TUR,false,,100,nombre oficial actual
-Turquía,Turquía,Turkey,TR,TUR,false,,100,nombre en español
-Turkey,Turquía,Turkey,TR,TUR,false,,100,nombre en inglés
-Federación de Rusia,Rusia,Russian Federation,RU,RUS,false,,100,nombre oficial en español
-Rusia,Rusia,Russian Federation,RU,RUS,false,,100,alias común
-Russian Federation,Rusia,Russian Federation,RU,RUS,false,,100,nombre oficial en inglés
-Brasil,Brasil,Brazil,BR,BRA,false,,100,nombre principal
-Brazil,Brasil,Brazil,BR,BRA,false,,100,nombre en inglés
-Argentina,Argentina,Argentina,AR,ARG,false,,100,nombre principal
-Chile,Chile,Chile,CL,CHL,false,,100,nombre principal
-Colombia,Colombia,Colombia,CO,COL,false,,100,nombre principal
-Perú,Perú,Peru,PE,PER,false,,100,nombre principal
-Peru,Perú,Peru,PE,PER,false,,100,variación sin acento
+Hong Kong,Hong Kong,Hong Kong,HK,HKG,false,,100,RAE de China
+Hong Kong SAR,Hong Kong,Hong Kong,HK,HKG,false,,100,alias comercial
+Hungría,Hungría,Hungary,HU,HUN,false,,100,alias Banxico en español
 India,India,India,IN,IND,false,,100,nombre principal
-Vietnam,Vietnam,Vietnam,VN,VNM,false,,100,nombre principal
+Indonesia,Indonesia,Indonesia,ID,IDN,false,,100,nombre principal
+Irak,Irak,Iraq,IQ,IRQ,false,,100,alias Banxico en español
+Irlanda,Irlanda,Ireland,IE,IRL,false,,100,nombre principal
+Islandia,Islandia,Iceland,IS,ISL,false,,100,alias Banxico en español
+Islas Caimán,Islas Caimán,Cayman Islands,KY,CYM,false,,100,territorio
+Islas Marianas,Islas Marianas del Norte,Northern Mariana Islands,MP,MNP,false,,70,revisión recomendada; nombre portal abreviado
+Islas Vírgenes Británicas,Islas Vírgenes Británicas,"Virgin Islands, British",VG,VGB,false,,100,territorio
+Islas Vírgenes USA,Islas Vírgenes de los Estados Unidos,"Virgin Islands, U.S.",VI,VIR,false,,95,territorio
+Italia,Italia,Italy,IT,ITA,false,,100,nombre principal
+Italy,Italia,Italy,IT,ITA,false,,100,nombre en inglés
+Japan,Japón,Japan,JP,JPN,false,,100,nombre en inglés
+Japón,Japón,Japan,JP,JPN,false,,100,nombre en español
+Jordania,Jordania,Jordan,JO,JOR,false,,100,alias Banxico en español
+Kazajstán,Kazajistán,Kazakhstan,KZ,KAZ,false,,95,variante ortográfica
+Kenia,Kenia,Kenya,KE,KEN,false,,100,alias Banxico en español
+Kirguizistán,Kirguistán,Kyrgyzstan,KG,KGZ,false,,95,variante ortográfica
+"Korea, Democratic People's Republic of",Corea del Norte,Korea Democratic People's Republic of,KP,PRK,false,,100,alias en inglés
+"Korea, Republic of",Corea del Sur,Korea Republic of,KR,KOR,false,,100,alias en inglés
+Latinoamérica y Antillas,Latinoamérica y Antillas,Latin America and Caribbean,,,true,region,100,agregado regional
+Letonia,Letonia,Latvia,LV,LVA,false,,100,alias Banxico en español
+Libia,Libia,Libya,LY,LBY,false,,100,alias Banxico en español
+Lituania,Lituania,Lithuania,LT,LTU,false,,100,alias Banxico en español
+Luxemburgo,Luxemburgo,Luxembourg,LU,LUX,false,,100,alias Banxico en español
+Líbano,Líbano,Lebanon,LB,LBN,false,,100,alias Banxico en español
+Macao,Macao,Macao,MO,MAC,false,,100,RAE de China
+Macao SAR,Macao,Macao,MO,MAC,false,,100,alias comercial
+Macedonia,Macedonia del Norte,North Macedonia,MK,MKD,false,,80,nombre histórico/abreviado
 Malasia,Malasia,Malaysia,MY,MYS,false,,100,nombre principal
 Malaysia,Malasia,Malaysia,MY,MYS,false,,100,nombre en inglés
-Tailandia,Tailandia,Thailand,TH,THA,false,,100,nombre principal
-Thailand,Tailandia,Thailand,TH,THA,false,,100,nombre en inglés
-Singapur,Singapur,Singapore,SG,SGP,false,,100,nombre principal
-Singapore,Singapur,Singapore,SG,SGP,false,,100,nombre en inglés
-Indonesia,Indonesia,Indonesia,ID,IDN,false,,100,nombre principal
-Filipinas,Filipinas,Philippines,PH,PHL,false,,100,nombre principal
-Philippines,Filipinas,Philippines,PH,PHL,false,,100,nombre en inglés
-Emiratos Árabes Unidos,Emiratos Árabes Unidos,United Arab Emirates,AE,ARE,false,,100,nombre principal
-United Arab Emirates,Emiratos Árabes Unidos,United Arab Emirates,AE,ARE,false,,100,nombre en inglés
-EAU,Emiratos Árabes Unidos,United Arab Emirates,AE,ARE,false,,100,abreviatura en español
-Arabia Saudita,Arabia Saudita,Saudi Arabia,SA,SAU,false,,100,nombre principal
-Saudi Arabia,Arabia Saudita,Saudi Arabia,SA,SAU,false,,100,nombre en inglés
-Sudáfrica,Sudáfrica,South Africa,ZA,ZAF,false,,100,nombre principal
-South Africa,Sudáfrica,South Africa,ZA,ZAF,false,,100,nombre en inglés
-Australia,Australia,Australia,AU,AUS,false,,100,nombre principal
-Nueva Zelanda,Nueva Zelanda,New Zealand,NZ,NZL,false,,100,nombre principal
+Maldivas,Maldivas,Maldives,MV,MDV,false,,100,alias Banxico en español
+Marruecos,Marruecos,Morocco,MA,MAR,false,,100,alias Banxico en español
+Martinica,Martinica,Martinique,MQ,MTQ,false,,100,territorio
+Mauricio,Mauricio,Mauritius,MU,MUS,false,,100,alias Banxico en español
+Mexico,México,Mexico,MX,MEX,false,,100,variación sin acento
+Moldavia,Moldavia,"Moldova, Republic of",MD,MDA,false,,100,alias Banxico en español
 Mundo,Mundo,World,,,true,world,100,agregado global
-World Total,Mundo,World,,,true,world,100,agregado fuente
-Total mundial,Mundo,World,,,true,world,100,agregado fuente
-Resto del mundo,Resto del mundo,Rest of World,,,true,rest_of_world,100,agregado fuente
+México,México,Mexico,MX,MEX,false,,100,nombre principal
+Netherlands,Países Bajos,Netherlands,NL,NLD,false,,100,nombre en inglés
+No Identificados,No Identificados,Unidentified,,,true,unidentified,100,agregado residual
+No declarados,No declarados,Undeclared,,,true,undeclared,100,agregado fuente
+No identificados de la U.E.,No identificados de la U.E.,Unidentified EU,,,true,regional_unknown,100,agregado/bolsa no identificada de la Unión Europea
+Noruega,Noruega,Norway,NO,NOR,false,,100,nombre principal
+Nueva Caledonia,Nueva Caledonia,New Caledonia,NC,NCL,false,,100,territorio
+Nueva Zelanda,Nueva Zelanda,New Zealand,NZ,NZL,false,,100,nombre principal
+Nueva Zelandia,Nueva Zelandia,New Zealand,NZ,NZL,false,,100,variante ortográfica portal
+Otros,Otros,Other,,,true,other_unspecified,100,agregado residual
 Otros países,Otros países,Other Countries,,,true,other_countries,100,agregado fuente
 Otros países no declarados,Otros países no declarados,Undeclared Other Countries,,,true,undeclared_other_countries,100,agregado fuente
-No declarados,No declarados,Undeclared,,,true,undeclared,100,agregado fuente
-Unión Europea,Unión Europea,European Union,,,true,bloc,100,bloque económico
-Union Europea,Unión Europea,European Union,,,true,bloc,100,variación sin acento
-European Union,Unión Europea,European Union,,,true,bloc,100,bloque económico
-Zona euro,Zona euro,Euro Area,,,true,bloc,100,bloque económico
-Euro Area,Zona euro,Euro Area,,,true,bloc,100,bloque económico
 Otros países no declarados de la Unión Europea,Otros países no declarados de la Unión Europea,Undeclared Other Countries of the European Union,,,true,regional_unknown,100,agregado fuente
-Latinoamérica y Antillas,Latinoamérica y Antillas,Latin America and Caribbean,,,true,region,100,agregado regional
-America Latina y Antillas,Latinoamérica y Antillas,Latin America and Caribbean,,,true,region,100,variación sin acento
-Europa,Europa,Europe,,,true,region,100,agregado regional
-Asia,Asia,Asia,,,true,region,100,agregado regional
-África y Oceanía,África y Oceanía,Africa and Oceania,,,true,region,100,agregado regional
-Africa y Oceania,África y Oceanía,Africa and Oceania,,,true,region,100,variación sin acento
-América del Norte,América del Norte,North America,,,true,region,100,agregado regional
-America del Norte,América del Norte,North America,,,true,region,100,variación sin acento
+Papua Nueva Guinea,Papúa Nueva Guinea,Papua New Guinea,PG,PNG,false,,100,alias Banxico en español
+Países Bajos,Países Bajos,Netherlands,NL,NLD,false,,100,nombre oficial en español
+People's Republic of China,China,China,CN,CHN,false,,100,nombre en inglés
+Peru,Perú,Peru,PE,PER,false,,100,variación sin acento
+Perú,Perú,Peru,PE,PER,false,,100,nombre principal
+Philippines,Filipinas,Philippines,PH,PHL,false,,100,nombre en inglés
+Polinesia Francesa,Polinesia Francesa,French Polynesia,PF,PYF,false,,100,territorio
+Polonia,Polonia,Poland,PL,POL,false,,100,nombre principal
+Portugal,Portugal,Portugal,PT,PRT,false,,100,nombre principal
+Reino Unido,Reino Unido,United Kingdom,GB,GBR,false,,100,alias común
+Reino Unido de Gran Bretaña e Irlanda del Norte,Reino Unido,United Kingdom,GB,GBR,false,,100,nombre oficial en español
+República Centroafricana,República Centroafricana,Central African Republic,CF,CAF,false,,100,alias Banxico en español
+República Checa,República Checa,Czechia,CZ,CZE,false,,100,alias tradicional
+República Dominicana,República Dominicana,Dominican Republic,DO,DOM,false,,100,alias Banxico en español
+República Eslovaca,Eslovaquia,Slovakia,SK,SVK,false,,95,nombre oficial largo
+República Popular China,China,China,CN,CHN,false,,100,nombre oficial alterno
+República Popular Democrática de Corea,Corea del Norte,Korea Democratic People's Republic of,KP,PRK,false,,100,nombre oficial
+República de Corea,Corea del Sur,Korea Republic of,KR,KOR,false,,100,nombre oficial en español
+República de Laos,Laos,Lao People's Democratic Republic,LA,LAO,false,,90,nombre portal extendido
+República de Yemen,Yemen,Yemen,YE,YEM,false,,85,nombre portal histórico/extenso
+República del Congo,República del Congo,Congo,CG,COG,false,,95,distinguir de RDC
+Resto del mundo,Resto del mundo,Rest of World,,,true,rest_of_world,100,agregado fuente
+Reunión,Reunión,Réunion,RE,REU,false,,100,territorio
+Ruanda,Ruanda,Rwanda,RW,RWA,false,,100,alias Banxico en español
+Rumania,Rumania,Romania,RO,ROU,false,,100,alias Banxico en español
+Rusia,Rusia,Russian Federation,RU,RUS,false,,100,alias común
+Russian Federation,Rusia,Russian Federation,RU,RUS,false,,100,nombre oficial en inglés
+San Cristóbal y Nieves,San Cristóbal y Nieves,Saint Kitts and Nevis,KN,KNA,false,,100,alias Banxico en español
+San Vicente y las Granadinas,San Vicente y las Granadinas,Saint Vincent and the Grenadines,VC,VCT,false,,100,alias Banxico en español
+Santa Lucía,Santa Lucía,Saint Lucia,LC,LCA,false,,100,alias Banxico en español
+Saudi Arabia,Arabia Saudita,Saudi Arabia,SA,SAU,false,,100,nombre en inglés
+Sierra Leona,Sierra Leona,Sierra Leone,SL,SLE,false,,100,alias Banxico en español
+Singapore,Singapur,Singapore,SG,SGP,false,,100,nombre en inglés
+Singapur,Singapur,Singapore,SG,SGP,false,,100,nombre principal
+South Africa,Sudáfrica,South Africa,ZA,ZAF,false,,100,nombre en inglés
+South Korea,Corea del Sur,Korea Republic of,KR,KOR,false,,100,alias en inglés
+Spain,España,Spain,ES,ESP,false,,100,nombre en inglés
+Suazilandia,Esuatini,Eswatini,SZ,SWZ,false,,85,nombre histórico
+Sudáfrica,Sudáfrica,South Africa,ZA,ZAF,false,,100,nombre principal
+Suecia,Suecia,Sweden,SE,SWE,false,,100,nombre principal
+Suiza,Suiza,Switzerland,CH,CHE,false,,100,nombre principal
+Surinam,Surinam,Suriname,SR,SUR,false,,100,alias Banxico en español
+Switzerland,Suiza,Switzerland,CH,CHE,false,,100,nombre en inglés
+Tailandia,Tailandia,Thailand,TH,THA,false,,100,nombre principal
+Taipei Chino,Taiwán,Taiwan,TW,TWN,false,,100,alias comercial en español
+Taiwan,Taiwán,Taiwan,TW,TWN,false,,100,nombre en inglés
+Taiwán,Taiwán,Taiwan,TW,TWN,false,,100,nombre en español
+Thailand,Tailandia,Thailand,TH,THA,false,,100,nombre en inglés
 Todas las regiones,Todas las regiones,All Regions,,,true,region,100,agregado fuente
+Total mundial,Mundo,World,,,true,world,100,agregado fuente
+Trinidad y Tobago,Trinidad y Tobago,Trinidad and Tobago,TT,TTO,false,,100,alias Banxico en español
+Turcas y Caicos,Islas Turcas y Caicos,Turks and Caicos Islands,TC,TCA,false,,95,territorio
+Turkey,Turquía,Turkey,TR,TUR,false,,100,nombre en inglés
+Turquía,Turquía,Turkey,TR,TUR,false,,100,nombre en español
+Túnez,Túnez,Tunisia,TN,TUN,false,,100,alias Banxico en español
+Türkiye,Turquía,Turkey,TR,TUR,false,,100,nombre oficial actual
+U.K.,Reino Unido,United Kingdom,GB,GBR,false,,100,abreviatura con puntos
+U.S.A.,Estados Unidos de América,United States of America,US,USA,false,,100,abreviatura en inglés
+UK,Reino Unido,United Kingdom,GB,GBR,false,,100,abreviatura
+USA,Estados Unidos de América,United States of America,US,USA,false,,100,abreviatura en inglés
+Ucrania,Ucrania,Ukraine,UA,UKR,false,,100,alias Banxico en español
+Union Europea,Unión Europea,European Union,,,true,bloc,100,variación sin acento
+United Arab Emirates,Emiratos Árabes Unidos,United Arab Emirates,AE,ARE,false,,100,nombre en inglés
+United Kingdom,Reino Unido,United Kingdom,GB,GBR,false,,100,nombre en inglés
+United Kingdom of Great Britain and Northern Ireland,Reino Unido,United Kingdom,GB,GBR,false,,100,nombre oficial en inglés
+United States,Estados Unidos de América,United States of America,US,USA,false,,100,alias en inglés
+United States of America,Estados Unidos de América,United States of America,US,USA,false,,100,nombre oficial en inglés
+Unión Europea,Unión Europea,European Union,,,true,bloc,100,bloque económico
+Vietnam,Vietnam,Vietnam,VN,VNM,false,,100,nombre principal
+World Total,Mundo,World,,,true,world,100,agregado fuente
+Yibuti,Yibuti,Djibouti,DJ,DJI,false,,100,alias Banxico en español
+Zaire,República Democrática del Congo,"Congo, The Democratic Republic of the",CD,COD,false,,70,nombre histórico
+Zona euro,Zona euro,Euro Area,,,true,bloc,100,bloque económico
+África y Oceanía,África y Oceanía,Africa and Oceania,,,true,region,100,agregado regional
